@@ -4,6 +4,11 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const path = require('path');
+try {
+  require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+} catch (_) {
+  // dotenv optional in some environments (e.g. production injects env vars)
+}
 
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');

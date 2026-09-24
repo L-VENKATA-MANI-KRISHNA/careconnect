@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+const apiBaseUrl = (() => {
+  const configuredUrl = import.meta.env.VITE_API_URL || '';
+  if (!configuredUrl) return '/api';
+  return `${configuredUrl.replace(/\/$/, '')}/api`;
+})();
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: apiBaseUrl,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -25,7 +31,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/auth/')) {
       originalRequest._retry = true;
       try {
-        const res = await axios.post('/api/auth/refresh', {}, { withCredentials: true });
+        const res = await api.post('/auth/refresh', {}, { withCredentials: true });
         const newToken = res.data.data.accessToken;
         if (newToken) {
           localStorage.setItem('careconnect_token', newToken);

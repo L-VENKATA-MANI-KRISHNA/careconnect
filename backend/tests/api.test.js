@@ -120,7 +120,9 @@ describe('CareConnect Backend Test Suite', () => {
     assert.strictEqual(json.success, true);
     assert.strictEqual(json.data.categoryName, 'Plumbing');
     assert.strictEqual(json.data.urgency, 'EMERGENCY');
-    assert.ok(json.data.requiredSkills.includes('Pipe Fitting'));
+    assert.ok(Array.isArray(json.data.requiredSkills));
+    assert.ok(json.data.requiredSkills.length > 0);
+    assert.ok(['groq_llm', 'openai_llm', 'rule_based_engine'].includes(json.data.method));
   });
 
   test('7. Customer creates a new Service Request', async () => {

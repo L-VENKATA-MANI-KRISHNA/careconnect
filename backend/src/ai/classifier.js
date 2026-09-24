@@ -100,11 +100,47 @@ const fallbackClassify = async (title = '', description = '') => {
 };
 
 /**
- * Main Classifier with OpenAI integration and graceful fallback
+ * Resolve LLM provider config from environment.
+ * Supports OpenAI (sk-...) and Groq OpenAI-compatible API (gsk_...).
+ * Override with AI_BASE_URL / AI_MODEL if needed.
+ */
+const resolveLLMConfig = () => {
+  const apiKey = process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY || process.env.AI_API_KEY;
+  if (!apiKey) return null;
+
+  const isGroqKey = apiKey.startsWith('gsk_') || (process.env.AI_BASE_URL || '').includes('groq');
+  const baseUrl =
+    process.env.AI_BASE_URL || (isGroqKey ? 'https://api.groq.com/openai/v1/chat/completions' : 'https://api.openai.com/v1/chat/completions');
+  const model =
+    process.env.AI_MODEL || (isGroqKey ? 'qwen/qwen3.8-27b' : 'gpt-3.5-turbo');
+  const method = isGroqKey ? 'groq_llm' : 'openai_llm';
+
+  return { apiKey, baseUrl, model, method };
+};
+
+/**
+ * Extract JSON object from LLM content (strips markdown fences / preamble).
+ */
+const parseLLMJson = (content) => {
+  const cleaned = content
+    .replace(/```json\s*/gi, '')
+    .replace(/```\s*/g, '')
+    .trim();
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error('No JSON object found in AI response');
+  }
+  return JSON.parse(cleaned.slice(start, end + 1));
+};
+
+/**
+ * Main Classifier with OpenAI / Groq integration and graceful fallback
  */
 const classifyServiceRequest = async (title, description) => {
-  if (!process.env.OPENAI_API_KEY) {
-    // Graceful deterministic classification when OpenAI key is not configured
+  const llm = resolveLLMConfig();
+  if (!llm) {
+    // Graceful deterministic classification when no AI key is configured
     return await fallbackClassify(title, description);
   }
 
@@ -123,27 +159,30 @@ Respond ONLY with a valid JSON object in this exact schema:
   "confidence": 0.95
 }`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch(llm.baseUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${llm.apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        model: llm.model,
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.1,
       }),
     });
 
     if (!response.ok) {
-      console.warn(`[AI Warning] OpenAI returned status ${response.status}. Using fallback classifier.`);
+      console.warn(`[AI Warning] LLM provider returned status ${response.status}. Using fallback classifier.`);
       return await fallbackClassify(title, description);
     }
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content?.trim();
-    const parsed = JSON.parse(content);
+    if (!content) {
+      throw new Error('Empty AI response');
+    }
+    const parsed = parseLLMJson(content);
 
     // Validate structured output
     if (!parsed.category || !Array.isArray(parsed.requiredSkills)) {
@@ -158,7 +197,7 @@ Respond ONLY with a valid JSON object in this exact schema:
       requiredSkills: parsed.requiredSkills,
       urgency: parsed.urgency || determineUrgency(`${title} ${description}`),
       confidence: parsed.confidence || 0.9,
-      method: 'openai_llm',
+      method: llm.method,
     };
   } catch (err) {
     console.warn(`[AI Classifier Fallback] ${err.message}. Using deterministic fallback.`);
@@ -169,4 +208,5 @@ Respond ONLY with a valid JSON object in this exact schema:
 module.exports = {
   classifyServiceRequest,
   fallbackClassify,
+  resolveLLMConfig,
 };
