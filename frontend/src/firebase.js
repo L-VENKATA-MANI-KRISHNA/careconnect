@@ -24,6 +24,26 @@ googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 export const signInWithGoogle = () => signInWithPopup(auth, googleProvider);
 
+// Map Firebase popup errors to actionable user-facing messages
+// (esp. helpful for deployed environments: authorized domains, popup blockers)
+export const describeGoogleSignInError = (err) => {
+  switch (err?.code) {
+    case 'auth/popup-closed-by-user':
+    case 'auth/cancelled-popup-request':
+      return null; // user dismissed — not an error worth showing
+    case 'auth/popup-blocked':
+      return 'Popup was blocked by the browser. Allow popups for this site and try again.';
+    case 'auth/unauthorized-domain':
+      return 'This domain is not authorized for Google sign-in. Add it in Firebase Console → Authentication → Settings → Authorized domains.';
+    case 'auth/network-request-failed':
+      return 'Network error contacting Google. Check your connection and try again.';
+    case 'auth/operation-not-allowed':
+      return 'Google sign-in is not enabled for this Firebase project. Enable it in Firebase Console → Authentication → Sign-in method.';
+    default:
+      return null;
+  }
+};
+
 // Initialize Analytics conditionally for browser environment support
 let analytics = null;
 if (typeof window !== 'undefined') {

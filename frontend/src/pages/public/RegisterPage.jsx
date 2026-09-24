@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Wrench, Mail, Lock, Phone, MapPin, Building, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { describeGoogleSignInError } from '../../firebase';
 import api from '../../api/client';
 
 const RegisterPage = () => {
@@ -38,11 +39,12 @@ const RegisterPage = () => {
         navigate('/customer/dashboard');
       }
     } catch (err) {
-      if (err.code === 'auth/popup-closed-by-user') {
+      const friendly = describeGoogleSignInError(err);
+      if (friendly === null && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request')) {
         setSubmitting(false);
         return;
       }
-      setError(err.response?.data?.message || err.message || 'Google sign-up failed');
+      setError(friendly || err.response?.data?.message || err.message || 'Google sign-up failed');
     } finally {
       setSubmitting(false);
     }

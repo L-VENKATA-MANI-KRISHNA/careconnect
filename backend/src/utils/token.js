@@ -36,10 +36,13 @@ const verifyRefreshToken = (token) => {
 
 const getCookieOptions = (maxAgeMs = 24 * 60 * 60 * 1000) => {
   const isProduction = process.env.NODE_ENV === 'production';
+  const clientUrl = process.env.CLIENT_URL || '';
+  const isCrossSite = !!clientUrl && !clientUrl.includes('localhost');
+
   return {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? 'strict' : 'lax',
+    sameSite: isProduction && isCrossSite ? 'none' : 'lax',
     maxAge: maxAgeMs,
     path: '/',
   };
@@ -53,8 +56,9 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
 };
 
 const clearAuthCookies = (res) => {
-  res.clearCookie('accessToken', { path: '/' });
-  res.clearCookie('refreshToken', { path: '/' });
+  const opts = getCookieOptions(0);
+  res.clearCookie('accessToken', { ...opts, maxAge: undefined });
+  res.clearCookie('refreshToken', { ...opts, maxAge: undefined });
 };
 
 module.exports = {

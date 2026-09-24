@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Lock, Mail, ShieldAlert, ArrowRight, UserCheck, Wrench, Shield, Headphones, Settings } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { describeGoogleSignInError } from '../../firebase';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -34,11 +35,12 @@ const LoginPage = () => {
       const user = await loginWithGoogle('CUSTOMER');
       redirectUser(user.role);
     } catch (err) {
-      if (err.code === 'auth/popup-closed-by-user') {
+      const friendly = describeGoogleSignInError(err);
+      if (friendly === null && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request')) {
         setSubmitting(false);
         return;
       }
-      setError(err.response?.data?.message || err.message || 'Google sign-in failed');
+      setError(friendly || err.response?.data?.message || err.message || 'Google sign-in failed');
     } finally {
       setSubmitting(false);
     }

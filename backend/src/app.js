@@ -16,6 +16,8 @@ const notFound = require('./middleware/notFound');
 
 const app = express();
 
+app.set('trust proxy', 1);
+
 // Security HTTP headers
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
