@@ -5,7 +5,8 @@ const connectDB = async () => {
 
   try {
     const conn = await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
+      // Atlas DNS/cluster discovery can exceed five seconds on slower networks.
+      serverSelectionTimeoutMS: 15000,
     });
 
     console.log(`[Database] MongoDB Connected: ${conn.connection.host}/${conn.connection.name}`);
