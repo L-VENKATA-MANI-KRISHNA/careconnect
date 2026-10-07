@@ -44,7 +44,7 @@
 ### 2. Frontend Architecture (100% Complete)
 - **Vite + React 18 + React Router v6**:
 - **Design System**: Vanilla CSS design system with Outfit & Plus Jakarta Sans typography, card surfaces, stat grids, modals, badges.
-- **Auth & Notification Contexts**: Persistent login, refresh handling, 1-click demo login buttons for all 5 roles.
+- **Auth & Notification Contexts**: Persistent login, refresh handling, and role-based dashboard routing.
 - **Public Pages**: Landing page with hero, how it works, and services catalog.
 - **Role Portals**:
   - Customer: Create Request with AI preview, compare quotes, track job lifecycle, pay invoices, submit reviews, raise disputes.

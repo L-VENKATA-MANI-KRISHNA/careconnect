@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Lock, Mail, ShieldAlert, ArrowRight, UserCheck, Wrench, Shield, Headphones, Settings } from 'lucide-react';
+import { Lock, Mail, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { describeGoogleSignInError } from '../../firebase';
 
@@ -64,23 +64,6 @@ const LoginPage = () => {
       default:
         navigate('/customer/dashboard');
         break;
-    }
-  };
-
-  // Quick One-Click Demo Logins
-  const quickLogin = async (demoEmail) => {
-    setEmail(demoEmail);
-    setPassword('Pass123!@#');
-    setSubmitting(true);
-    setError('');
-
-    try {
-      const user = await login(demoEmail, 'Pass123!@#');
-      redirectUser(user.role);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Demo login failed');
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -191,59 +174,6 @@ const LoginPage = () => {
           Don't have an account? <Link to="/register" style={{ color: 'var(--primary-600)', fontWeight: 600 }}>Create an account</Link>
         </div>
 
-        {/* 1-Click Demo Accounts Bar */}
-        <div style={{ marginTop: '2rem', borderTop: '1px solid var(--border-subtle)', paddingTop: '1.5rem' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-dim)', textAlign: 'center', marginBottom: '0.75rem' }}>
-            One-Click Demo Roles (Local Testing)
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem' }}>
-            <button
-              type="button"
-              onClick={() => quickLogin('customer1@careconnect.local')}
-              className="btn btn-secondary btn-sm"
-              style={{ justifyContent: 'flex-start' }}
-            >
-              <UserCheck size={15} style={{ color: 'var(--primary-600)' }} />
-              <span>Customer</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => quickLogin('provider1@careconnect.local')}
-              className="btn btn-secondary btn-sm"
-              style={{ justifyContent: 'flex-start' }}
-            >
-              <Wrench size={15} style={{ color: 'var(--accent-teal)' }} />
-              <span>Provider</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => quickLogin('operations@careconnect.local')}
-              className="btn btn-secondary btn-sm"
-              style={{ justifyContent: 'flex-start' }}
-            >
-              <Settings size={15} style={{ color: 'var(--accent-amber)' }} />
-              <span>Operations</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => quickLogin('support@careconnect.local')}
-              className="btn btn-secondary btn-sm"
-              style={{ justifyContent: 'flex-start' }}
-            >
-              <Headphones size={15} style={{ color: 'var(--accent-purple)' }} />
-              <span>Support</span>
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={() => quickLogin('admin@careconnect.local')}
-            className="btn btn-secondary btn-sm"
-            style={{ width: '100%', marginTop: '0.5rem', justifyContent: 'center' }}
-          >
-            <Shield size={15} style={{ color: 'var(--accent-rose)' }} />
-            <span>Platform Admin</span>
-          </button>
-        </div>
       </div>
     </div>
   );
